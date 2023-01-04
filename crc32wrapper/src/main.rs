@@ -1,21 +1,48 @@
+// Note - There is no point wrapping this all in an object,
+// because the saved state is simply a u32
+
+
 fn main() {
 
-    let state = CRC32State{ crcval:  0xFFFFFFFF };
-
     // let val = crcbyte(&state, 'A'); 
+    const REFDATA:  [u8; 1] = [ 0x40 ];
 
-    println!("The CRC-32 of A is");
+    let result = crc32_stream(&REFDATA, REFDATA.len(), 0xFFFFFFFF);
 
-    
+    println!("The CRC-32 of A is {:#08x}/{:#08x}",
+        result, crc32_finalize(result) );
+
 }
 
-
-pub struct CRC32State {
-    crcval : u32 
+/// The algoritm actually calculates the inverted result.
+fn crc32_finalize (crc : u32 ) -> u32 {
+    crc ^ 0xffff_ffff
 }
 
-// fn crcbyte(mut &CRC32State) -> u32 {
-//    }
+/// Intended for CRC'ing a continuous block of memory
+///
+/// Usage Notes
+/// - Pass in INIT_REFLECTED for the initial call (0xffff ffff)
+/// - You must invert the final result after all of the sub-calls.
+///
+/// \param blk_adr Block Address
+/// \param blk_len Block Length
+/// \param crc CRC Table address
+
+fn crc32_stream (blk : &[u8], blk_len: usize, mut crc : u32 ) -> u32 {
+    let mut index  : usize = 0;
+
+    while index < blk_len {
+        let byte : u32 = blk[index].into(); 
+        index += 1;
+
+        let index : usize = ((crc ^ byte) & 0xFF).try_into().unwrap();
+
+        let lookup = CRCTABLE256[index];
+        crc = lookup ^ (crc >> 8);
+    }
+    crc
+}
 
 
 
