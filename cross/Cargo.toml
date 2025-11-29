@@ -1,0 +1,14 @@
+[package]
+name = "cross"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cty = "0.2"
+
+[lib]
+name = "rust_cross"
+crate-type = ["staticlib", "rlib"]
+
+[profile.release]
+debug = true
